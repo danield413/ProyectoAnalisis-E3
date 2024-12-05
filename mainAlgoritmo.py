@@ -138,32 +138,25 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     nuevaMatrizPresente, nuevaMatrizFuturo, nuevaTPM, elementosT
                 )
                 
-                print("vector particion 1", vectorParticion1)
-                print("vector particion 2", vectorParticion2)
+                # print("vector particion 1", vectorParticion1)
+                # print("vector particion 2", vectorParticion2)
                 
                 vectorFinal = producto_tensorial(vectorParticion1, vectorParticion2)
                 
                 valorEMD = compararParticion(vectorFinal, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
                 
-                print("valor EMD", valorEMD)
+                # print("valor EMD", valorEMD)
                 
                 if valorEMD < menorValorEMD:
                     menorValorEMD = valorEMD
                     particion_actual = particion1
                     particion_actual_complemento = particion2
                     
-                
-                # print("vector_tpm", nuevaTPM)
-                # diferenciaEMD = calcularEMD(vectorFinal, vectorParticion1)
-                # print("diferencia EMD", diferenciaEMD , "\n")
-                
-                
-                
             
         iteracion += 1
-            
-        
     
+    return particion_actual, particion_actual_complemento, menorValorEMD
+            
 
 def generarVecindario(particion_actual, particion_actual_complemento):
     # Inicializamos una lista vacía para almacenar las particiones vecinas
@@ -215,8 +208,8 @@ def generarParticionInicial(suconjuntoSistemaCandidato):
     return particionInicial, complemento
 
     
-busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos)
-    
+x = busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos)
+print(x)
     
     
     
