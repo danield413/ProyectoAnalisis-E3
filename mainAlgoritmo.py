@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import time
+from itertools import combinations
 
 from data.cargarData import obtenerInformacionCSV
 from utilidades.background import aplicarCondicionesBackground
@@ -20,7 +21,7 @@ from utilidades.comparaciones import compararParticion
 from data.matrices import subconjuntoSistemaCandidato
 from data.matrices import subconjuntoElementos
 from data.matrices import estadoActualElementos
-_, _, TPM = obtenerInformacionCSV('csv/red5.csv')
+_, _, TPM = obtenerInformacionCSV('csv/red10.csv')
 
 
 #? ----------------- MATRIZ PRESENTE Y MATRIZ FUTURO ---------------------------------
@@ -90,6 +91,8 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
 
     particion_actual, particion_actual_complemento = generarParticionInicial(subconjuntoSistemaCandidato)
     
+    
+    
     vectorParticionActual1 = obtenerVectorProbabilidad(
         particion_actual, partirMatricesPresentes, partirMatricesFuturas, partirMatricesTPM,
         estadoActualElementos, subconjuntoElementos, indicesElementosT,
@@ -105,27 +108,26 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
     
     vectorFinal = producto_tensorial(vectorParticionActual1, vectorParticionActual2)
     menorValorEMD = compararParticion(vectorFinal, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
-    # print("diferencia EMD", menorValorEMD)
-    # print()
     
+    print("PARTICION INICIAL ELEGIDA")
+    print(particion_actual, particion_actual_complemento, "emd", menorValorEMD)
+    
+    print("EJECUCION DE LAS ITERACIONES \n")
     
     iteracion = 0
     while iteracion < maxIteraciones:
         
-        print()
-        print("Particion Inicial al ejecutar el ciclo")
-        print(particion_actual, particion_actual_complemento)
-        print("emd" , menorValorEMD)
-        print()
+        print("\n iteracion: ", iteracion , "\n")
+        print("Mejor particion actual", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
         
         vecindario = generarVecindario(particion_actual, particion_actual_complemento)
-    
+        
+        # for vecino in vecindario:
+        #     print(vecino)
         hayMejoria = False
         for vecino in vecindario:
-                print("particion vecina")
                 particion1 = vecino[0]
                 particion2 = vecino[1]
-                print(particion1, particion2)
                 
                 vectorParticion1 = obtenerVectorProbabilidad(
                     particion1, partirMatricesPresentes, partirMatricesFuturas, partirMatricesTPM,
@@ -139,14 +141,11 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     nuevaMatrizPresente, nuevaMatrizFuturo, nuevaTPM, elementosT
                 )
                 
-                # print("vector particion 1", vectorParticion1)
-                # print("vector particion 2", vectorParticion2)
-                
                 vectorFinal = producto_tensorial(vectorParticion1, vectorParticion2)
                 
                 valorEMD = compararParticion(vectorFinal, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
                 
-                # print("valor EMD", valorEMD)
+                print("VECINA", particion1, particion2, "EMD: ", valorEMD)
                 
                 if valorEMD < menorValorEMD:
                     hayMejoria = True
@@ -155,70 +154,94 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     particion_actual_complemento = particion2
             
         if not hayMejoria:
+            print("No se encontro mejora")
             break
-            
         iteracion += 1
     
     return particion_actual, particion_actual_complemento, menorValorEMD
             
 
-def generarVecindario(particion_actual, particion_actual_complemento):
-    # Inicializamos una lista vacía para almacenar las particiones vecinas
+def generarVecindario(particion_actual, particion_complemento, limite = 10):
     vecindario = []
+
+    # Desempaquetar las particiones
+    actual_t, actual_t_mas_1 = particion_actual
+    complemento_t, complemento_t_mas_1 = particion_complemento
+
+    # Generar movimientos de uno o más nodos de complemento a actual
+    for k in range(1, len(complemento_t) + 1):  # Variar tamaño del grupo movido
+        for grupo in combinations(complemento_t, k):
+            nueva_actual = [actual_t + list(grupo), list(actual_t_mas_1)]
+            nuevo_complemento = [list(complemento_t), list(complemento_t_mas_1)]
+            for nodo in grupo:
+                nuevo_complemento[0].remove(nodo)
+
+            # Verificar que no queden vacías
+            if nueva_actual[0] and nuevo_complemento[0]:
+                vecindario.append((nueva_actual, nuevo_complemento))
+
+    # Generar movimientos de uno o más nodos de actual a complemento
+    for k in range(1, len(actual_t) + 1):  # Variar tamaño del grupo movido
+        for grupo in combinations(actual_t, k):
+            nueva_actual = [list(actual_t), list(actual_t_mas_1)]
+            nuevo_complemento = [complemento_t + list(grupo), list(complemento_t_mas_1)]
+            for nodo in grupo:
+                nueva_actual[0].remove(nodo)
+
+            # Verificar que no queden vacías
+            if nueva_actual[0] and nuevo_complemento[0]:
+                vecindario.append((nueva_actual, nuevo_complemento))
+
+    # (Opcional) Intercambio de nodos entre particiones
+    for nodo_actual in actual_t:
+        for nodo_complemento in complemento_t:
+            nueva_actual = [list(actual_t), list(actual_t_mas_1)]
+            nuevo_complemento = [list(complemento_t), list(complemento_t_mas_1)]
+
+            # Intercambiar los nodos
+            nueva_actual[0].remove(nodo_actual)
+            nueva_actual[0].append(nodo_complemento)
+            nuevo_complemento[0].remove(nodo_complemento)
+            nuevo_complemento[0].append(nodo_actual)
+
+            # Verificar que no queden vacías
+            if nueva_actual[0] and nuevo_complemento[0]:
+                vecindario.append((nueva_actual, nuevo_complemento))
+
+    #* Limitar el tamaño del vecindario
+    #* poner en orden aleatorio el vecindario
+    np.random.shuffle(vecindario)
+    return vecindario[:limite]
     
-    particionVencidarioActual = copy.deepcopy(particion_actual)
-    particionVecindarioActualComplemento = copy.deepcopy(particion_actual_complemento)
-    
-    #identificar cual particion es mas grande
-    for comp in particion_actual_complemento[0]:
-        ##la agrego a la 1era particion
-        particionVencidarioActual[0].append(comp)
-        ##la elimino de la 2da particion
-        particionVecindarioActualComplemento[0].remove(comp)
-        # print("particion vecina")
-        # print(particionVencidarioActual, particionVecindarioActualComplemento)
-        vecindario.append((particionVencidarioActual, particionVecindarioActualComplemento))
-        
-    particionVencidarioActual = copy.deepcopy(particion_actual)
-    particionVecindarioActualComplemento = copy.deepcopy(particion_actual_complemento)
-    
-    for comp in particion_actual_complemento[1]:
-        ##la agrego a la 2da particion
-        particionVencidarioActual[1].append(comp)
-        ##la elimino de la 1era particion
-        particionVecindarioActualComplemento[1].remove(comp)
-        # print("particion vecina")
-        # print(particionVencidarioActual, particionVecindarioActualComplemento)
-        vecindario.append((particionVencidarioActual, particionVecindarioActualComplemento))
-        
-    vecindarioCorrecto = []
-    for vecino in vecindario:
-        if vecino[0] != ([],[]) and vecino[1] != ([],[]):
-            if vecino[0] != particion_actual and vecino[1] != particion_actual_complemento:
-                vecindarioCorrecto.append(vecino)
-    
-    return vecindarioCorrecto
 
 
+def generarParticionInicial(subconjuntoSistemaCandidato):
+    # Número de elementos para dividir
+    num_elementos = len(subconjuntoSistemaCandidato)
 
-def generarParticionInicial(suconjuntoSistemaCandidato):
-    
-    numeroRandom = np.random.randint(1, len(subconjuntoSistemaCandidato))
-    elementoRandom = subconjuntoSistemaCandidato[numeroRandom]
-    
-    particionInicial = ([],[])
-    if 't+1' in elementoRandom:
-        particionInicial[0].append(elementoRandom)
-    else:
-        particionInicial[1].append(elementoRandom)
-        
+    # Elegir un tamaño aleatorio para la partición inicial
+    tamano_particion = np.random.randint(1, num_elementos)
+
+    # Generar todas las combinaciones posibles de ese tamaño
+    combinaciones = list(combinations(subconjuntoSistemaCandidato, tamano_particion))
+
+    # Elegir una combinación al azar para formar la partición inicial
+    particion_aleatoria = list(combinaciones[np.random.randint(0, len(combinaciones))])
+
+    # Crear la partición inicial y su complemento
+    particionInicial = ([], [])
+    for elemento in particion_aleatoria:
+        if 't+1' in elemento:
+            particionInicial[0].append(elemento)
+        else:
+            particionInicial[1].append(elemento)
+
     complemento = particionComplemento(particionInicial, subconjuntoSistemaCandidato)
-    
+
     return particionInicial, complemento
 
-    
-x = busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos, 100)
-print(x)
+busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos)
+
     
     
     
