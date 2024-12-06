@@ -120,6 +120,7 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
         
         vecindario = generarVecindario(particion_actual, particion_actual_complemento)
     
+        hayMejoria = False
         for vecino in vecindario:
                 print("particion vecina")
                 particion1 = vecino[0]
@@ -148,10 +149,13 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                 # print("valor EMD", valorEMD)
                 
                 if valorEMD < menorValorEMD:
+                    hayMejoria = True
                     menorValorEMD = valorEMD
                     particion_actual = particion1
                     particion_actual_complemento = particion2
-                    
+            
+        if not hayMejoria:
+            break
             
         iteracion += 1
     
