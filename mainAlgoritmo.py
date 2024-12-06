@@ -154,7 +154,8 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     particion_actual_complemento = particion2
             
         if not hayMejoria:
-            print("No se encontro mejora")
+            print("\n No se encontró mejora \n")
+            print("Mejor particion encontrada", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
             break
         iteracion += 1
     
