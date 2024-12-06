@@ -187,10 +187,15 @@ def generarVecindario(particion_actual, particion_actual_complemento):
         # print(particionVencidarioActual, particionVecindarioActualComplemento)
         vecindario.append((particionVencidarioActual, particionVecindarioActualComplemento))
         
-    return vecindario
+    vecindarioCorrecto = []
+    for vecino in vecindario:
+        if vecino[0] != ([],[]) and vecino[1] != ([],[]):
+            if vecino[0] != particion_actual and vecino[1] != particion_actual_complemento:
+                vecindarioCorrecto.append(vecino)
+    
+    return vecindarioCorrecto
 
 
-        
 
 def generarParticionInicial(suconjuntoSistemaCandidato):
     
@@ -208,7 +213,7 @@ def generarParticionInicial(suconjuntoSistemaCandidato):
     return particionInicial, complemento
 
     
-x = busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos)
+x = busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos, 100)
 print(x)
     
     
