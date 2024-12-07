@@ -118,7 +118,7 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
     while iteracion < maxIteraciones:
         
         print("\n iteracion: ", iteracion , "\n")
-        print("Mejor particion actual", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
+        print("Mejor partición actual", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
         
         vecindario = generarVecindario(particion_actual, particion_actual_complemento)
         
@@ -155,7 +155,7 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
             
         if not hayMejoria:
             print("\n No se encontró mejora \n")
-            print("Mejor particion encontrada", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
+            print("Mejor partición encontrada", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
             break
         iteracion += 1
     
