@@ -145,7 +145,7 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                 
                 valorEMD = compararParticion(vectorFinal, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
                 
-                print("VECINA", particion1, particion2, "EMD: ", valorEMD)
+                print("VECINA", particion1, particion2)
                 
                 if valorEMD < menorValorEMD:
                     hayMejoria = True
@@ -162,55 +162,72 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
     return particion_actual, particion_actual_complemento, menorValorEMD
             
 
-def generarVecindario(particion_actual, particion_complemento, limite = 10):
+def generarVecindario(particion_actual, particion_complemento, limite=10):
     vecindario = []
 
     # Desempaquetar las particiones
     actual_t, actual_t_mas_1 = particion_actual
     complemento_t, complemento_t_mas_1 = particion_complemento
 
-    # Generar movimientos de uno o más nodos de complemento a actual
-    for k in range(1, len(complemento_t) + 1):  # Variar tamaño del grupo movido
+    # Movimientos de nodos entre particiones (de complemento a actual)
+    for k in range(1, len(complemento_t) + 1):
         for grupo in combinations(complemento_t, k):
             nueva_actual = [actual_t + list(grupo), list(actual_t_mas_1)]
             nuevo_complemento = [list(complemento_t), list(complemento_t_mas_1)]
             for nodo in grupo:
                 nuevo_complemento[0].remove(nodo)
 
-            # Verificar que no queden vacías
+            # Evitar particiones vacías
             if nueva_actual[0] and nuevo_complemento[0]:
                 vecindario.append((nueva_actual, nuevo_complemento))
 
-    # Generar movimientos de uno o más nodos de actual a complemento
-    for k in range(1, len(actual_t) + 1):  # Variar tamaño del grupo movido
+    # Movimientos de nodos entre particiones (de actual a complemento)
+    for k in range(1, len(actual_t) + 1):
         for grupo in combinations(actual_t, k):
             nueva_actual = [list(actual_t), list(actual_t_mas_1)]
             nuevo_complemento = [complemento_t + list(grupo), list(complemento_t_mas_1)]
             for nodo in grupo:
                 nueva_actual[0].remove(nodo)
 
-            # Verificar que no queden vacías
+            # Evitar particiones vacías
             if nueva_actual[0] and nuevo_complemento[0]:
                 vecindario.append((nueva_actual, nuevo_complemento))
 
-    # (Opcional) Intercambio de nodos entre particiones
+    # Intercambios de nodos entre particiones
     for nodo_actual in actual_t:
         for nodo_complemento in complemento_t:
             nueva_actual = [list(actual_t), list(actual_t_mas_1)]
             nuevo_complemento = [list(complemento_t), list(complemento_t_mas_1)]
 
-            # Intercambiar los nodos
+            # Realizar el intercambio
             nueva_actual[0].remove(nodo_actual)
             nueva_actual[0].append(nodo_complemento)
             nuevo_complemento[0].remove(nodo_complemento)
             nuevo_complemento[0].append(nodo_actual)
 
-            # Verificar que no queden vacías
+            # Evitar particiones vacías
             if nueva_actual[0] and nuevo_complemento[0]:
                 vecindario.append((nueva_actual, nuevo_complemento))
 
-    #* Limitar el tamaño del vecindario
-    #* poner en orden aleatorio el vecindario
+    # Redistribuciones aleatorias (siempre asegurando que ambas particiones tengan elementos)
+    todos_los_nodos_t = actual_t + complemento_t
+    todos_los_nodos_t_mas_1 = actual_t_mas_1 + complemento_t_mas_1
+    for _ in range(3):  # Generar algunas redistribuciones aleatorias
+        np.random.shuffle(todos_los_nodos_t)
+        np.random.shuffle(todos_los_nodos_t_mas_1)
+
+        # Dividir los nodos en dos particiones
+        corte_t = np.random.randint(1, len(todos_los_nodos_t))
+        corte_t_mas_1 = np.random.randint(1, len(todos_los_nodos_t_mas_1))
+
+        nueva_actual = [todos_los_nodos_t[:corte_t], todos_los_nodos_t_mas_1[:corte_t_mas_1]]
+        nuevo_complemento = [todos_los_nodos_t[corte_t:], todos_los_nodos_t_mas_1[corte_t_mas_1:]]
+
+        # Asegurarse de que ambas particiones no estén vacías
+        if nueva_actual[0] and nuevo_complemento[0]:
+            vecindario.append((nueva_actual, nuevo_complemento))
+
+    # Mezclar el vecindario y limitar su tamaño
     np.random.shuffle(vecindario)
     return vecindario[:limite]
     
