@@ -15,13 +15,14 @@ from utilidades.vectorProbabilidad import obtenerVectorProbabilidad
 from utilidades.utils import calcularEMD
 from utilidades.comparaciones import compararParticion
 
+np.set_printoptions(threshold=np.inf)
 #? ----------------- ENTRADAS DE DATOS ---------------------------------
 
 # from data.matrices import TPM
 from data.matrices import subconjuntoSistemaCandidato
 from data.matrices import subconjuntoElementos
 from data.matrices import estadoActualElementos
-_, _, TPM = obtenerInformacionCSV('csv/red5.csv')
+_, _, TPM = obtenerInformacionCSV('csv/red10.csv')
 
 
 #? ----------------- MATRIZ PRESENTE Y MATRIZ FUTURO ---------------------------------
@@ -141,9 +142,9 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     nuevaMatrizPresente, nuevaMatrizFuturo, nuevaTPM, elementosT
                 )
                 
-                vectorFinal = producto_tensorial(vectorParticion1, vectorParticion2)
+                vector = producto_tensorial(vectorParticion1, vectorParticion2)
                 
-                valorEMD = compararParticion(vectorFinal, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
+                valorEMD = compararParticion(vector, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
                 
                 print("VECINA", particion1, particion2)
                 
@@ -152,10 +153,11 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     menorValorEMD = valorEMD
                     particion_actual = particion1
                     particion_actual_complemento = particion2
+                    vectorFinal = vector
             
         if not hayMejoria:
             print("\n No se encontró mejora \n")
-            print("Mejor partición encontrada", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
+            print("Mejor partición encontrada", particion_actual, particion_actual_complemento, "emd", menorValorEMD, vectorFinal , "\n")
             break
         iteracion += 1
     
@@ -258,8 +260,11 @@ def generarParticionInicial(subconjuntoSistemaCandidato):
 
     return particionInicial, complemento
 
+time_start = time.time()
 busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos)
+time_end = time.time()
 
+print("Tiempo de ejecución: ", time_end - time_start)
     
     
     
