@@ -85,15 +85,42 @@ partirMatricesPresentes, partirMatricesFuturas, partirMatricesTPM = partirRepres
 #* --------------------------------------------------------------------------------------------
 #* --------------------------------------------------------------------------------------------
 
-
+print("\n ALGORITMO HEURÍSTICO DE BÚSQUEDA LOCAL - ESTRATEGIA 3. \n")
 
 def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, estadoActualElementos, maxIteraciones = 10):
+    '''
     
+    DANIEL ALBERTO DÍAZ CASTRO - 23622 
+    JUAN MANUEL FIGUEROA VALENCIA - 28539
+    
+    ANÁLISIS Y DISEÑO DE ALGORITMOS
+    
+    Función que ejecuta el algoritmo de búsqueda local para encontrar la mejor partición
+    de los elementos del sistema candidato en dos conjuntos, de tal forma que se minimice
+    la distancia EMD entre el conjunto dividido y el conjunto original sin dividir.
+    
+    Cómo funciona el algoritmo de búsqueda local:
+    1. Se genera una partición inicial aleatoria de los elementos del sistema candidato.
+    2. A partir de la partición inicial, se generan particiones vecinas.
+    3. Se calcula la EMD de cada partición vecina y se selecciona la mejor.
+    4. Se repite el proceso hasta que no se encuentre una mejora en la EMD.
+    5. Si no se encuentra mejora en un número máximo de iteraciones, se finaliza el algoritmo (óptimo local).
+    6. Se retorna la mejor partición encontrada y su complemento.
+    
+    Parámetros:
+    - nuevaTPM: matriz de transición de probabilidad.
+    - subconjuntoElementos: Subconjunto de elementos a analizar en t
+    - subconjuntoSistemaCandidato: Subconjunto del sistema candidato a analizar (elementos en t y en t+1)
+    - estadoActualElementos: El estado actual de todos los elementos del sistema
+    
+    Retorna:
+    - La mejor partición encontrada.
+    '''
 
+    # Generar la partición inicial (aleatoria)
     particion_actual, particion_actual_complemento = generarParticionInicial(subconjuntoSistemaCandidato)
     
-    
-    
+    # Calcular el vector de probabilidad de la partición inicial
     vectorParticionActual1 = obtenerVectorProbabilidad(
         particion_actual, partirMatricesPresentes, partirMatricesFuturas, partirMatricesTPM,
         estadoActualElementos, subconjuntoElementos, indicesElementosT,
@@ -106,7 +133,7 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
         nuevaMatrizPresente, nuevaMatrizFuturo, nuevaTPM, elementosT
     )
     
-    
+    # Calcular el producto tensorial de los vectores de probabilidad y su EMD en diferencia con la TPM partición original
     vectorFinal = producto_tensorial(vectorParticionActual1, vectorParticionActual2)
     menorValorEMD = compararParticion(vectorFinal, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
     
@@ -116,17 +143,18 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
     print("EJECUCION DE LAS ITERACIONES \n")
     
     iteracion = 0
+    # Mientras no se alcance el número máximo de iteraciones
     while iteracion < maxIteraciones:
         
         print("\n iteracion: ", iteracion , "\n")
         print("Mejor partición actual", particion_actual, particion_actual_complemento, "emd", menorValorEMD, "\n")
         
+        # Generar el vecindario de particiones
         vecindario = generarVecindario(particion_actual, particion_actual_complemento)
         
-        # for vecino in vecindario:
-        #     print(vecino)
         hayMejoria = False
         for vecino in vecindario:
+                # Obtener ambas particiones y sus vectores de probabilidad
                 particion1 = vecino[0]
                 particion2 = vecino[1]
                 
@@ -142,29 +170,51 @@ def busqueda_local(nuevaTPM, subconjuntoElementos, subconjuntoSistemaCandidato, 
                     nuevaMatrizPresente, nuevaMatrizFuturo, nuevaTPM, elementosT
                 )
                 
+                # Calcular el producto tensorial de los vectores de probabilidad
                 vector = producto_tensorial(vectorParticion1, vectorParticion2)
                 
+                # Comparar el vector de probabilidad de la particion con el vector de probabilidad original
                 valorEMD = compararParticion(vector, nuevaMatrizPresente, nuevaTPM, subconjuntoElementos, estadoActualElementos)
                 
-                print("VECINA", particion1, particion2)
+                print("- VECINA: ", particion1, particion2)
                 
+                # Si se encuentra una mejora, actualizar la partición actual
                 if valorEMD < menorValorEMD:
+                    # Actualizar el estado de mejoría
                     hayMejoria = True
                     menorValorEMD = valorEMD
                     particion_actual = particion1
                     particion_actual_complemento = particion2
                     vectorFinal = vector
             
+        # Si no se encontró mejora, finalizar el algoritmo
         if not hayMejoria:
             print("\n No se encontró mejora \n")
             print("Mejor partición encontrada", particion_actual, particion_actual_complemento, "emd", menorValorEMD, vectorFinal , "\n")
             break
+            
+        # Incrementar el número de iteraciones
         iteracion += 1
     
+    # Retornar la mejor partición encontrada
     return particion_actual, particion_actual_complemento, menorValorEMD
             
 
 def generarVecindario(particion_actual, particion_complemento, limite=10):
+    
+    '''
+    Función que genera un vecindario de particiones a partir de una partición actual y su complemento.
+    Los vecinos son elegidos de la siguiente forma:
+    1. Movimientos de nodos entre particiones.
+    2. Intercambios de nodos entre particiones.
+    3. Redistribuciones aleatorias de nodos entre particiones.
+    
+    Parámetros:
+    - particion_actual: La partición actual de los elementos.
+    - particion_complemento: El complemento de la partición actual.
+    - limite: El número máximo de vecinos a generar. Por defecto es 10.
+    '''
+    
     vecindario = []
 
     # Desempaquetar las particiones
