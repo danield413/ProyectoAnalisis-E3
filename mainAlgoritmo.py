@@ -269,8 +269,17 @@ def generarVecindario(particion_actual, particion_complemento, limite=10):
         np.random.shuffle(todos_los_nodos_t_mas_1)
 
         # Dividir los nodos en dos particiones
-        corte_t = np.random.randint(1, len(todos_los_nodos_t))
-        corte_t_mas_1 = np.random.randint(1, len(todos_los_nodos_t_mas_1))
+        corte_t = 0
+        if len(todos_los_nodos_t) == 1:
+            corte_t = 1
+        else:
+            corte_t = np.random.randint(1, len(todos_los_nodos_t))
+        
+        corte_t_mas_1 = 0
+        if len(todos_los_nodos_t_mas_1) == 1:
+            corte_t_mas_1 = 1
+        else:
+            corte_t_mas_1 = np.random.randint(1, len(todos_los_nodos_t_mas_1))
 
         nueva_actual = [todos_los_nodos_t[:corte_t], todos_los_nodos_t_mas_1[:corte_t_mas_1]]
         nuevo_complemento = [todos_los_nodos_t[corte_t:], todos_los_nodos_t_mas_1[corte_t_mas_1:]]
