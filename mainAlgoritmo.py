@@ -22,7 +22,7 @@ np.set_printoptions(threshold=np.inf)
 from data.matrices import subconjuntoSistemaCandidato
 from data.matrices import subconjuntoElementos
 from data.matrices import estadoActualElementos
-_, _, TPM = obtenerInformacionCSV('csv/red10.csv')
+_, _, TPM = obtenerInformacionCSV('csv/red6.csv')
 
 
 #? ----------------- MATRIZ PRESENTE Y MATRIZ FUTURO ---------------------------------
